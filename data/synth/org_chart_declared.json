@@ -1,0 +1,132 @@
+{
+  "teams": {
+    "team_alpha": {
+      "name": "Producto Alpha (Core Banking)",
+      "product_line": "core"
+    },
+    "team_beta": {
+      "name": "Producto Beta (Pagos)",
+      "product_line": "payments"
+    },
+    "team_gamma": {
+      "name": "Producto Gamma (Onboarding Digital)",
+      "product_line": "onboarding"
+    },
+    "team_growth": {
+      "name": "Growth & Retención",
+      "product_line": "growth"
+    }
+  },
+  "members": [
+    {
+      "actor_id_hash": "4ce2c2b487f1",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "67ce9bf41da8",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "1443cf9c4f4b",
+      "declared_team": "team_gamma",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "bfa77d8dd940",
+      "declared_team": "team_growth",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ed61a0106ec9",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "d979df96bc5b",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ad55053f31d6",
+      "declared_team": "team_alpha",
+      "role": "senior_engineer_bottleneck"
+    },
+    {
+      "actor_id_hash": "8ac2bdb9615a",
+      "declared_team": "team_growth",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "25ab45c7f6b1",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "37aaa53b34a2",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ca6ffc3d276c",
+      "declared_team": "team_gamma",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "4de3e41c159e",
+      "declared_team": "team_growth",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "2f84f385c2df",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "548849cb25cd",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "189d4e84a2cc",
+      "declared_team": "team_alpha",
+      "role": "security_approver"
+    },
+    {
+      "actor_id_hash": "b00ccd075cb7",
+      "declared_team": "team_growth",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "092bd204ec2d",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "5aac83c5db36",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "6c27a4417e07",
+      "declared_team": "team_gamma",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "2913b0a5558c",
+      "declared_team": "team_growth",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "b6bb1b2986af",
+      "declared_team": "team_alpha",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "4cf6e6a50300",
+      "declared_team": "team_beta",
+      "role": "engineer"
+    }
+  ]
+}

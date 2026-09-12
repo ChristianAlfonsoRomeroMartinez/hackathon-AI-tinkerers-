@@ -1,0 +1,26 @@
+{
+  "retencion_clientes": {
+    "label": "Retención de clientes",
+    "strategic_value": "alto"
+  },
+  "cumplimiento_regulatorio": {
+    "label": "Cumplimiento regulatorio",
+    "strategic_value": "alto"
+  },
+  "deuda_tecnica_critica": {
+    "label": "Deuda técnica crítica",
+    "strategic_value": "medio"
+  },
+  "onboarding_cliente": {
+    "label": "Onboarding de cliente (end-to-end)",
+    "strategic_value": "alto"
+  },
+  "soporte_reactivo": {
+    "label": "Soporte reactivo no diferenciador",
+    "strategic_value": "bajo"
+  },
+  "mantenimiento_operativo": {
+    "label": "Mantenimiento operativo",
+    "strategic_value": "bajo"
+  }
+}

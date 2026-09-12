@@ -1,0 +1,222 @@
+{
+  "n_tickets": 6000,
+  "pathologies": {
+    "P1_hero_spof": {
+      "actor_id": "actor_07",
+      "target_handoff_share": 0.4,
+      "absence_window_days": [
+        180,
+        194
+      ],
+      "absence_lead_time_multiplier": 3.0
+    },
+    "P2_useless_approval": {
+      "state": "Pending Approval Security",
+      "queue_days_median": 6.0,
+      "queue_days_lognorm_sigma": 0.4,
+      "rejection_rate": 0.02,
+      "applies_to_categories": [
+        "deuda_tecnica_critica",
+        "onboarding_cliente"
+      ]
+    },
+    "P3_misaligned_silo": {
+      "description": "handoffs se generan por tech_layer, no por declared_team"
+    },
+    "P4_hidden_operational_debt": {
+      "category": "mantenimiento_operativo",
+      "share_of_category_same_root_cause": 0.35,
+      "root_cause_template_id": "RC-REINICIO-MANUAL-SVC",
+      "touch_time_minutes_range": [
+        8,
+        20
+      ]
+    },
+    "P5_triage_pingpong": {
+      "category": "soporte_reactivo",
+      "affected_share": 0.3,
+      "reassignments_before_resolution": 4
+    },
+    "P6_silent_strategic_misalignment": {
+      "healthy_flow_low_value_team": "team_alpha",
+      "low_value_share_in_team": 0.55,
+      "saturated_high_value_team": "team_growth",
+      "high_value_share_in_team": 0.75,
+      "saturated_queue_multiplier": 1.8
+    },
+    "P7_value_stream_fragmentation": {
+      "category": "onboarding_cliente",
+      "team_sequence": [
+        "team_gamma",
+        "team_beta",
+        "team_alpha",
+        "team_growth"
+      ],
+      "handoff_dwell_days_range": [
+        0.5,
+        1.5
+      ],
+      "internal_touch_time_hours_range": [
+        1,
+        4
+      ],
+      "expected_e2e_multiplier_vs_single_leg": 3.0
+    }
+  },
+  "achieved_stats": {
+    "hero_actor_id": "actor_07",
+    "hero_share_of_critical_handoffs": 0.388,
+    "n_critical_handoffs_observed": 3874,
+    "n_tickets_total": 6000,
+    "n_onboarding_cross_team": 600,
+    "P2_tickets_with_security_approval": 463,
+    "P4_hidden_debt_share_in_category": 0.316,
+    "P5_pingpong_share_in_category": 0.306,
+    "P6_team_alpha_low_value_share": 0.573,
+    "P6_team_growth_high_value_share": 0.756,
+    "P7_onboarding_vs_normal_lead_time_ratio": 4.88
+  },
+  "actor_real_structure": [
+    {
+      "actor_id_hash": "4ce2c2b487f1",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "67ce9bf41da8",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "1443cf9c4f4b",
+      "declared_team": "team_gamma",
+      "real_tech_layer": "infra_platform",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "bfa77d8dd940",
+      "declared_team": "team_growth",
+      "real_tech_layer": "security",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ed61a0106ec9",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "d979df96bc5b",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ad55053f31d6",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "infra_platform",
+      "role": "senior_engineer_bottleneck"
+    },
+    {
+      "actor_id_hash": "8ac2bdb9615a",
+      "declared_team": "team_growth",
+      "real_tech_layer": "security",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "25ab45c7f6b1",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "37aaa53b34a2",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "ca6ffc3d276c",
+      "declared_team": "team_gamma",
+      "real_tech_layer": "infra_platform",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "4de3e41c159e",
+      "declared_team": "team_growth",
+      "real_tech_layer": "security",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "2f84f385c2df",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "548849cb25cd",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "189d4e84a2cc",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "security",
+      "role": "security_approver"
+    },
+    {
+      "actor_id_hash": "b00ccd075cb7",
+      "declared_team": "team_growth",
+      "real_tech_layer": "security",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "092bd204ec2d",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "5aac83c5db36",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "6c27a4417e07",
+      "declared_team": "team_gamma",
+      "real_tech_layer": "infra_platform",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "2913b0a5558c",
+      "declared_team": "team_growth",
+      "real_tech_layer": "security",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "b6bb1b2986af",
+      "declared_team": "team_alpha",
+      "real_tech_layer": "frontend",
+      "role": "engineer"
+    },
+    {
+      "actor_id_hash": "4cf6e6a50300",
+      "declared_team": "team_beta",
+      "real_tech_layer": "backend",
+      "role": "engineer"
+    }
+  ],
+  "validation_checklist": [
+    "P1: betweenness centrality del héroe (hash) debe ser outlier >> resto del grafo",
+    "P2: queue time mediano en 'Pending Approval Security' ~6 días, rejection_rate observado ~2%",
+    "P3: comunidades de Louvain sobre el grafo de handoffs deben agrupar por tech_layer real, no por declared_team del organigrama oficial",
+    "P4: clustering semántico de títulos en categoría mantenimiento_operativo debe aislar un cluster ~35% con causa raíz repetida (root_cause_template_id=RC-REINICIO-MANUAL-SVC)",
+    "P5: tickets de soporte_reactivo con >=4 eventos 'reassignment' antes de Done, ~30% de la categoría",
+    "P6: team_alpha con flujo saludable pero >=50% tickets de bajo valor estratégico; team_growth saturado (queue time alto) con >=70% tickets de alto valor",
+    "P7: lead_time_hours de tickets is_cross_team_flow=true debe ser ~3x el touch time interno de cualquier tramo individual, explicado por estados 'Waiting Handoff'"
+  ]
+}
