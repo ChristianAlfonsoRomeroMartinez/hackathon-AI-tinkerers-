@@ -178,6 +178,51 @@ def get_flow_metrics(
     return result
 
 
+def get_monthly_trend(
+    state: str | None = None,
+    category: str | None = None,
+    declared_team: str | None = None,
+    actor_hash: str | None = None,
+    dataset: Dataset | None = None,
+) -> dict:
+    """Conteo de eventos por mes calendario (todos los meses con datos,
+    hasta un máximo razonable) que cumplen los filtros dados. Existe para
+    que el agente pueda verificar PERSISTENCIA real de un patrón (cuántos
+    de los últimos N meses aparece de forma estable) en vez de estimarla,
+    antes de invocar classify_change_severity con `months_present_last_6`.
+
+    state filtra por to_state; category/declared_team por los campos ya
+    propagados a cada evento; actor_hash por quién ejecutó el evento (útil
+    para medir la presencia mes a mes de un actor específico, ej. un SPOF).
+    """
+    dataset = dataset or load_dataset()
+    ev = dataset.events.copy()
+
+    if state is not None:
+        ev = ev[ev["to_state"] == state]
+    if category is not None:
+        ev = ev[ev["category"] == category]
+    if declared_team is not None:
+        ev = ev[ev["declared_team"] == declared_team]
+    if actor_hash is not None:
+        ev = ev[ev["actor_hash"] == actor_hash]
+
+    ev = ev.copy()
+    ev["month"] = ev["ts"].dt.to_period("M").astype(str)
+    counts = ev.groupby("month").size()
+
+    all_months = dataset.events["ts"].dt.to_period("M").astype(str).unique()
+    all_months = sorted(all_months)[-6:]  # últimos 6 meses del dataset
+
+    by_month = [{"month": m, "n_events": int(counts.get(m, 0))} for m in all_months]
+
+    return {
+        "filters": {"state": state, "category": category, "declared_team": declared_team, "actor_hash": actor_hash},
+        "months": by_month,
+        "n_months_with_any_presence": sum(1 for m in by_month if m["n_events"] > 0),
+    }
+
+
 if __name__ == "__main__":
     import json
 

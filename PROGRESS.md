@@ -380,37 +380,214 @@ Resultado sobre `category='mantenimiento_operativo'` (1.470 tickets):
   sistémico de falta de post-mortems/fixes permanentes, no un bug puntual.
   Esto es MÁS fuerte como hallazgo estructural que "un cluster dominante".
 
-## Siguiente paso pendiente de confirmación del usuario
-**Fase 4 — `find_ticket_clusters` + `get_ticket_samples`**: módulo ya
-escrito en `src/orgconsultant/clustering.py`, pendiente de EJECUTAR porque
-sentence-transformers se estaba instalando en background al cortarse el
-contexto. Antes de continuar:
-1. Verificar instalación: `python3 -c "import sentence_transformers"` (si
-   falla, reinstalar: `pip3 install --break-system-packages -q
-   sentence-transformers`, tarda varios minutos por torch).
-2. Correr `PYTHONPATH=src python3 -m orgconsultant.clustering` y confirmar
-   que aísla un cluster dominante en `mantenimiento_operativo` (esto es el
-   checkpoint que pidió el usuario para esta fase, todavía no verificado).
-3. Mostrar al usuario el resultado y esperar su confirmación antes de Fase 5.
+## Fase 5 completa: 6.000/6.000 tickets clasificados
+`data/derived/business_alignment_cache.json` completo. Agregado real:
+- effort_type: deuda_operativa 39.1% (2346), valor_directo 29.9% (1794),
+  deuda_tecnica 20.9% (1253), friccion_proceso 10.1% (607) — **70% de toda
+  la capacidad organizacional está fuera de valor directo**.
+- pct_outside_core_by_team: team_beta 81.7% (peor), team_alpha 79.1%,
+  team_growth 69.4%, team_gamma 56.4% (mejor).
 
-## Fases pendientes (resumen, ver prompt original del usuario para detalle completo)
-4. `find_ticket_clusters` + `get_ticket_samples` — código listo, falta
-   ejecutar y confirmar (ver arriba) — SIGUIENTE
-5. `classify_business_alignment` (Capa 2.5, ÚNICA parte con LLM en batch,
-   structured output forzado, cacheado por ticket) — necesita
-   `ANTHROPIC_API_KEY`, pedírsela al usuario
-8. Orquestación del agente con Anthropic API (tool use real, iterativo,
-   con traza de invocaciones logueada — este es el "demo" central) —
-   necesita la misma `ANTHROPIC_API_KEY`
-9. Informe final (Markdown/HTML) con las 6 secciones especificadas
-   (resumen ejecutivo, matriz esfuerzo/valor, hallazgos por severidad,
-   organigrama actual vs propuesto, plan de horizontes, anexo metodológico
-   — debe mencionar: mutación WIP de esta sesión, y la nota de "costo de
-   demora" de la Fase 7)
-10. Validación manual del usuario contra `ground_truth.json` — NO la hago yo.
+## Fase 8 — primera corrida real: encontró el problema, corregido
+Primera corrida de `run_agent()` (25 turnos) NO llegó a informe final —
+gpt-oss:120b entró en loop alucinando valores de `lever_type` que no
+existían en el enum (`"parallel_approval"`, `"capacity_increase"`,
+`"generic"`, `"automation"`, etc., 12 intentos fallidos seguidos) para
+`simulate_change`. Causa: el modelo no respeta de forma confiable un
+`enum` de string en argumentos de tool-call (a diferencia del `format` de
+salida estructurada, que sí obedece bien el schema). También se detectó
+que enviaba `category`/`team`/`state` como `""` (string vacío) en vez de
+omitir el campo, lo cual con nuestras funciones filtraba a 0 resultados
+en vez de "sin filtro". Y no tenía ninguna forma de verificar persistencia
+mensual real — `months_present_last_6` se lo inventaba.
 
-(Fases 6 y 7 ya completadas fuera de orden mientras se esperaba una
-instalación — ver arriba. Faltan solo 4, 5, 8, 9, 10.)
+**Correcciones aplicadas en `tools_schema.py`/`flow_metrics.py`/`agent.py`**:
+1. `simulate_change` (un tool, un parámetro `lever_type` enum) ->
+   reemplazado por DOS tools sin enum: `simulate_remove_bottleneck_state` y
+   `simulate_reduce_bottleneck_state` — el nombre del tool codifica la
+   acción, elimina la posibilidad de alucinar un valor de enum inválido.
+   (`simulation.py` no cambió — sigue teniendo `simulate_change` como
+   función Python interna; solo cambió la superficie expuesta al LLM.)
+2. `call_tool()` normaliza CUALQUIER argumento `""` -> ausente antes de
+   despachar (arreglo centralizado, no por función).
+3. Todos los parámetros `category`/`team`/`declared_team`/`state` en los
+   schemas ahora traen `"enum": [valores reales]` Y el texto de
+   `description` lista los valores válidos en español — reforzado por
+   partida doble dado que el enum solo no bastó en el caso de
+   `lever_type`.
+4. Nueva tool `get_monthly_trend(state, category, declared_team,
+   actor_hash)` en `flow_metrics.py` — conteo de eventos por mes
+   calendario (últimos 6 meses del dataset), para que el agente cuente
+   persistencia real en vez de inventarla.
+5. `simulate_horizon_cascade`: su parámetro `sequence` ya no usa
+   `lever_type` enum tampoco — ahora es `{target_state, remove: bool,
+   reduction_pct}`, un booleano en vez de un string, mismo razonamiento.
+6. `max_turns` de `run_agent` subido de 25 a 30 por margen de seguridad.
+
+Segunda corrida lanzada con estas correcciones — verificar
+`data/derived/agent_trace.jsonl` y el resultado en
+`/tmp/.../scratchpad/agent_run2.log` (ruta de scratchpad de ESTA sesión,
+no persiste entre sesiones — si hace falta revisar en una sesión nueva,
+re-correr `PYTHONPATH=src python3 -m orgconsultant.agent`).
+
+## Frontend construido: `web/dashboard.html`
+Dashboard Apple-style ("Punto Ciego") con sistema de diseño propio
+(Instrument Sans + Instrument Serif, paleta con status colors validados
+del skill de dataviz). Secciones: hero con KPIs reales, reproductor de
+traza del agente (dinámico, JS), 7 hallazgos con severidad/evidencia
+citada (expandibles, filtrables), matriz esfuerzo×valor real, organigrama
+declarado vs Louvain, plan de horizontes (cascada real de
+simulate_horizon_cascade), RACI del horizonte de rediseño de equipos
+(actores reales), anexo metodológico.
+
+**Pendiente**: los datos de FINDINGS/KPIS/etc en el `<script>` del
+dashboard están hardcodeados a mano con los números que YO calculé
+directamente (no a través del loop del agente) durante la espera —
+son reales y verificados, pero conviene, una vez la Fase 8 corra limpio,
+contrastar/enriquecer el dashboard con la traza y el informe narrativo
+REAL del agente (especialmente el trace-player, que hoy no tiene datos
+embebidos todavía — placeholder vacío en `#traceLog`, hay que rellenarlo
+con el contenido real de `agent_trace.jsonl` de la corrida buena).
+
+## Repo de GitHub
+Publicado y actualizado en
+https://github.com/ChristianAlfonsoRomeroMartinez/hackathon-AI-tinkerers-
+(branch `main`). Recordar: nunca commitear `.env` (ya en .gitignore, tiene
+las 3 API keys: OLLAMA_API_KEY, EXA_API_KEY, OPENAI_API_KEY-sin-crédito).
+Falta un segundo commit+push con: business_alignment_cache.json completo
+(6000, iba parcial en el primer commit), tools_schema.py/flow_metrics.py/
+agent.py corregidos, web/dashboard.html, y el trace real una vez limpio.
+
+## Fase 8 — segunda corrida: ÉXITO, informe final real generado
+12 turnos, terminó con respuesta final (no agotó max_turns). Encontró y
+clasificó correctamente 3 hallazgos (FND-001 aprobación bottleneck,
+FND-002 SPOF, FND-003 desalineación >70% fuera de core), los 3
+"estratégico" con evidencia real citada, más `propose_org_blocks` y
+`simulate_horizon_cascade` invocados correctamente. Trace completo en
+`data/derived/agent_trace.jsonl`.
+
+**Limitación real observada y documentada** (no oculta): el informe en
+prosa del LLM tiene al menos un error de atribución numérica — dice "SPOF
+toca 5.125 tickets (≈85%)" cuando en realidad esa cifra (5.125) es
+`n_tickets_touched` de la comunidad 0 de `propose_org_blocks`, no de la
+llamada a `get_handoff_graph` sobre el actor SPOF (que da 2.211 tickets,
+37%, verificado independientemente). El modelo mezcló evidencia de dos
+tool calls distintos en una sola frase. Lección: gpt-oss:120b (vía Ollama
+Cloud) es capaz de una investigación multi-turno coherente y de usar bien
+los resultados de las tools para las DECISIONES (severidad, montos de
+simulación), pero puede cometer errores de atribución en la NARRATIVA — un
+humano debe revisar la prosa final antes de publicarla tal cual. Por eso
+el dashboard (`web/dashboard.html`) usa una síntesis de hallazgos
+verificada por mí directamente contra las tools (números exactos,
+re-chequeados), no una copia literal de la prosa del agente — la traza sí
+es 100% real y sin editar.
+
+## Bug real encontrado y corregido: doble conteo en simulate_horizon_cascade
+Al construir el dashboard con los números de la cascada, se detectó que
+cada horizonte recalculaba su `reduction_pct` contra la cola ORIGINAL
+completa (recuperada de `dataset.events` cada vez), no contra lo que
+quedaba tras el horizonte anterior — el lead_time SÍ se acumulaba bien
+(porque `baseline_tickets` se pasa de un horizonte a otro), pero el
+**ahorro económico de cada horizonte no era incremental de verdad**,
+así que sumarlos sobrestimaba el total (daba ~$10.7M en vez de $5.64M
+para una secuencia que termina en remove_state completo, que por
+definición no puede ahorrar más que la eliminación total de una sola vez).
+
+**Corregido** en `simulation.py`: `simulate_change` ahora acepta y
+devuelve `remaining_queue_hours` (Series ticket_id -> horas de cola AÚN
+restantes en el estado), que se pasa de horizonte a horizonte en
+`simulate_horizon_cascade` — cada `reduction_pct` ahora sí se aplica sobre
+el remanente real, no sobre el original. Verificado: la suma de los 3
+horizontes ahora da EXACTAMENTE $5,640,151.47 (coincide con el
+remove_state de un solo paso, como debe ser matemáticamente). Si
+`target_state` cambia entre horizontes de la secuencia, el remanente se
+resetea (no tiene sentido encadenarlo entre estados distintos) — ver el
+comentario en el código.
+
+`tools_schema.py` también se actualizó: `_dispatch_simulate_remove`/
+`_dispatch_simulate_reduce` ahora excluyen tanto `resulting_tickets` como
+`remaining_queue_hours` de lo que se le devuelve al LLM (ninguno de los
+dos es serializable/relevante para el modelo).
+
+## Fase 9 — Frontend construido, verificado y publicado
+`web/dashboard.html` — dashboard "Punto Ciego", diseño Apple-style
+(Instrument Sans + Instrument Serif, paleta con status colors del skill
+de dataviz, dark/light mode completo). Publicado como Artifact:
+**https://claude.ai/code/artifact/0dbec2b0-838b-4b11-a9a9-8faadf06c794**
+
+Contenido, todo con datos reales (no lorem, no inventado):
+- Hero con KPIs reales (70% fuera de core, 37% handoffs por 1 actor, 14.4
+  días p90 aprobación, $5.64M/año ahorro).
+- Reproductor de traza REAL del agente (12 pasos, terminal-style, play/pause).
+- 7 hallazgos con severidad/criterios/evidencia, filtrable, expandible —
+  5 estratégico + 2 organizacional (verificado que NO todo escala al
+  máximo, cumpliendo la restricción anti-sobre-actuación del prompt original).
+- Matriz esfuerzo × valor real (heatmap) + % fuera de core por equipo.
+- Organigrama declarado vs. comunidades Louvain reales.
+- Plan de horizontes con números YA CORREGIDOS (post-fix del bug de doble conteo).
+- RACI del horizonte de rediseño de equipos (actores reales de onboarding).
+- Anexo metodológico.
+
+**Verificación visual**: se probó primero navegando al artifact publicado
+en claude.ai vía claude-in-chrome — el scroll automatizado dentro del
+iframe anidado del visor de artifacts no funcionaba bien (limitación de la
+herramienta de automatización, no del código: `window.scrollTo` sí
+actualizaba `scrollY` pero el screenshot no lo reflejaba consistentemente).
+Para descartar un bug real, se sirvió el MISMO archivo por HTTP local
+(`python3 -m http.server`) y se verificó ahí con JS directo: las 5
+secciones tardías (matriz/organigrama/horizontes/raci/metodología) SÍ
+existen con alturas correctas (documentElement.scrollHeight=5902px), sin
+errores de consola, reproductor de traza funcionando con play/pause real.
+Conclusión: el archivo está bien, fue puramente un artefacto de probar
+scroll dentro de un iframe sandboxed de terceros.
+
+Nota menor: al servir el archivo por `http.server` plano (sin el charset
+que el propio Artifact inyecta automáticamente al publicar), los acentos
+se ven mal (mojibake) — ESO es solo un artefacto de mi debug local, no del
+archivo ni del artifact publicado (que si tiene el charset inyectado por
+la plataforma y se ve correctamente, confirmado en las capturas hechas
+directo sobre claude.ai). No agregar `<meta charset>` manualmente al
+archivo — la plataforma ya lo hace y no se deben repetir doctype/html/head
+en el source de un Artifact.
+
+## Repo de GitHub — actualizado con todo lo anterior
+https://github.com/ChristianAlfonsoRomeroMartinez/hackathon-AI-tinkerers-
+(branch `main`). Segundo commit ya incluye: `web/dashboard.html`,
+`tools_schema.py`/`flow_metrics.py`/`simulation.py`/`agent.py` corregidos,
+`business_alignment_cache.json` completo (6000/6000), y
+`data/derived/agent_trace.jsonl` de la corrida buena (12 turnos, real).
+
+## Estado final: Fases 1-9 completas. Solo falta la Fase 10 (la hace el usuario)
+Todas las capas están construidas, corridas contra el dataset completo, y
+verificadas — ver las secciones de arriba para el detalle y las cifras
+exactas de cada una. Resumen de las 7 patologías, todas confirmadas con
+evidencia real sin leer `ground_truth.json`:
+
+| # | Patología | Confirmada como | Severidad |
+|---|---|---|---|
+| 1 | Héroe/SPOF (`ad55053f31d6`) | betweenness 0.457, 3.2× el 2º, 37% de tickets, 4/4 equipos | estratégico |
+| 2 | Aprobación de seguridad inútil | p90 345h, 13× el resto, 100% alto/medio valor | estratégico |
+| 3 | Silo mal cortado | 4 equipos → 2 comunidades Louvain, modularidad 0.079 | estratégico |
+| 4 | Deuda operativa invisible | 100% de mantenimiento_operativo es 30 plantillas repetidas, 31.6% oculta | organizacional |
+| 5 | Ping-pong de triage | 30.6% de soporte_reactivo con ≥4 reasignaciones | organizacional |
+| 6 | Desalineación estratégica | team_alpha 57.3% bajo valor / team_growth 75.6% alto+medio | estratégico |
+| 7 | Fragmentación end-to-end | onboarding "de team_gamma" cruza 4 equipos, 4.9× más lento | estratégico |
+
+**Fase 10 (validación manual contra `ground_truth.json`) es del usuario, no
+mía** — todo lo de arriba se calculó SIN leer ese archivo, tal como pedía
+la especificación original.
+
+## Posibles siguientes pasos (no pedidos aún, solo ideas si el usuario quiere seguir)
+- Re-correr el agente unas cuantas veces más y comparar consistencia entre
+  corridas (gpt-oss:120b no es 100% determinista turno a turno).
+- Revisar/pulir la prosa narrativa que el agente genera en su informe final
+  (tiene al menos un error de atribución numérica documentado arriba) antes
+  de usarla como texto literal en cualquier entregable.
+- Completar `report.py` para que también pueda ensamblar el informe en
+  Markdown/HTML standalone (hoy el dashboard cubre ese rol de facto).
+- Si se quiere un dominio propio o CI/CD, evaluar GitHub Pages para servir
+  `web/dashboard.html` directamente desde el repo (hoy la "publicación"
+  vive en el Artifact de Claude, que ya es un link compartible).
 
 ## Recordatorios de alcance (qué NO construir, del prompt original)
 Sin conectores reales Jira/Zendesk, sin anonimización real de PII, sin RACI

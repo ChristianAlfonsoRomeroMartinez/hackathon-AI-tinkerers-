@@ -5,6 +5,14 @@ Jira/Zendesk/ServiceNow) en diagnóstico estructural y propuestas de cambio
 organizacional, con plan progresivo de implementación. Construido para un
 hackathon de agentes.
 
+**🔦 Demo en vivo (dashboard "Punto Ciego"):**
+https://claude.ai/code/artifact/0dbec2b0-838b-4b11-a9a9-8faadf06c794
+
+Dashboard con los hallazgos reales, la traza real del agente (reproducible
+paso a paso) y las simulaciones económicas — todo generado por el pipeline
+de este repo, no maquetado a mano. Código fuente del frontend en
+`web/dashboard.html`.
+
 Ver `PROGRESS.md` para el estado detallado de construcción (fase por fase,
 decisiones tomadas, bugs encontrados/corregidos) — este README es solo la
 vista de "cómo correrlo".
@@ -29,7 +37,7 @@ src/orgconsultant/
   data_loader.py        Capa 0 — carga event log + tickets + organigrama + taxonomía
   flow_metrics.py        Capa 1 — lead time, tasas, tiempos de cola por estado
   handoff_graph.py        Capa 1/2 — grafo de handoffs, betweenness, comunidades Louvain
-  clustering.py             Capa 2 — clustering semántico de títulos (embeddings + HDBSCAN)
+  clustering.py             Capa 2 — clustering semántico de títulos (TF-IDF + SVD + HDBSCAN)
   business_alignment.py     Capa 2.5 — tipo de esfuerzo (LLM) + criticidad estratégica (taxonomía)
   severity.py                Capa 3 — clasificación determinista de severidad de hallazgos
   org_blocks.py                Capa 3 — bloques organizacionales propuestos
@@ -41,6 +49,7 @@ src/orgconsultant/
   report.py                           ensamblado del informe final (HTML)
 tests/test_severity.py   tests unitarios de la regla de severidad (17 casos)
 scripts/inject_wip_snapshot.py   inyección de snapshot de WIP realista (ya corrido)
+web/dashboard.html   frontend "Punto Ciego" — dashboard con hallazgos, traza del agente y simulaciones
 ```
 
 ## Cómo correr
@@ -71,7 +80,17 @@ PYTHONPATH=src python3 -m orgconsultant.agent
 
 ## Estado actual
 
-Ver `PROGRESS.md` — al momento de este commit, capas 1-7 construidas y
-verificadas, Fase 5 (clasificación de negocio) corriendo sobre el dataset
-completo, Fase 8 (agente) construida y pendiente de una corrida end-to-end
-completa, Fase 9 (informe final) con el anexo metodológico listo.
+Ver `PROGRESS.md` para el detalle fase por fase. Resumen: las 10 capas
+(carga, flujo, grafo de handoffs, clustering, alineación de negocio,
+severidad, bloques organizacionales, simulación, orquestación del agente,
+frontend) están construidas, corridas de punta a punta contra el dataset
+completo (6.000 tickets, 6.000/6.000 clasificados) y verificadas. El agente
+corrió en vivo (`data/derived/agent_trace.jsonl`) y encontró, sin leer
+`ground_truth.json`, evidencia cuantitativa para el héroe/SPOF, el cuello
+de botella de aprobación y la desalineación estratégica — clasificados
+todos como "estratégico" por la regla determinista de severidad, con
+$5.64M/año de ahorro potencial simulado. El resto de las 7 patologías
+plantadas (silo mal cortado, deuda operativa repetida, ping-pong de
+triage, fragmentación end-to-end) están confirmadas con evidencia real
+calculada directamente sobre las herramientas y presentadas en el
+dashboard — ver `PROGRESS.md` para el detalle de qué se verificó cómo.

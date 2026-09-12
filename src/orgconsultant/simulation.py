@@ -57,22 +57,27 @@ def simulate_change(
     cost_per_hour_usd: float = DEFAULT_COST_PER_HOUR_USD,
     dataset: Dataset | None = None,
     baseline_tickets: pd.DataFrame | None = None,
+    remaining_queue_hours: pd.Series | None = None,
 ) -> dict:
     """Simula un cambio simple y recalcula lead time / WIP esperado (Ley de
     Little) y el ahorro económico anualizado.
 
     lever_type:
-        "remove_state" — elimina por completo el tiempo de cola de
+        "remove_state" — elimina por completo el tiempo de cola RESTANTE de
             `target_state` para los tickets que pasaron por ahí
             (reduction_pct se ignora, equivale a 1.0).
-        "reduce_state_queue_time" — recorta el tiempo de cola de
-            `target_state` en `reduction_pct` (0.0-1.0) para los tickets
-            que pasaron por ahí.
+        "reduce_state_queue_time" — recorta el tiempo de cola RESTANTE de
+            `target_state` en `reduction_pct` (0.0-1.0).
 
-    baseline_tickets: si se pasa (típicamente el resultado de un horizonte
-        anterior en simulate_horizon_cascade), se usa como punto de partida
-        en vez de recalcular desde el dataset original — así se pueden
-        encadenar cambios.
+    baseline_tickets / remaining_queue_hours: si se pasan (típicamente el
+        resultado de un horizonte anterior en simulate_horizon_cascade), se
+        usan como punto de partida en vez de recalcular desde el dataset
+        original — así los horizontes encadenan de verdad: `reduction_pct`
+        en el horizonte N se aplica sobre lo que QUEDABA tras el horizonte
+        N-1, no sobre la cola original completa otra vez (ese fue un bug
+        real detectado corriendo el agente: sin esto, sumar el "ahorro" de
+        varios horizontes sobrestima el total porque cada uno se calculaba
+        contra la cola original de cero).
     """
     dataset = dataset or load_dataset()
     if lever_type not in {"remove_state", "reduce_state_queue_time"}:
@@ -89,14 +94,17 @@ def simulate_change(
     )
     baseline_lead_time = tickets["lead_time_hours"].copy()
 
-    intervals = _state_intervals(dataset.events)
-    intervals = intervals[intervals["state"] == target_state]
-    intervals = intervals[intervals["ticket_id"].isin(tickets["ticket_id"])]
-    # un ticket puede visitar el mismo estado más de una vez (reopen loops);
-    # sumamos toda su cola en ese estado antes de recortar.
-    delta_by_ticket = (
-        intervals.groupby("ticket_id")["queue_hours"].sum() * effective_reduction
-    )
+    if remaining_queue_hours is None:
+        # primer horizonte: derivar la cola real restante desde el event log
+        intervals = _state_intervals(dataset.events)
+        intervals = intervals[intervals["state"] == target_state]
+        intervals = intervals[intervals["ticket_id"].isin(tickets["ticket_id"])]
+        # un ticket puede visitar el mismo estado más de una vez (reopen loops);
+        # sumamos toda su cola en ese estado antes de recortar.
+        remaining_queue_hours = intervals.groupby("ticket_id")["queue_hours"].sum()
+
+    delta_by_ticket = remaining_queue_hours * effective_reduction
+    new_remaining_queue_hours = remaining_queue_hours - delta_by_ticket
 
     tickets = tickets.set_index("ticket_id")
     tickets["delta_hours"] = 0.0
@@ -150,6 +158,7 @@ def simulate_change(
             "annualized_cost_saved_usd": round(annualized_cost_saved_usd, 2),
         },
         "resulting_tickets": tickets,  # para encadenar en simulate_horizon_cascade; no serializar tal cual en el informe
+        "remaining_queue_hours": new_remaining_queue_hours,  # ídem — cola restante para el siguiente horizonte
     }
 
 
@@ -176,21 +185,32 @@ def simulate_horizon_cascade(
     """
     dataset = dataset or load_dataset()
     baseline_tickets = None
+    remaining_queue_hours = None
+    prev_target_state = None
     horizons = []
     cumulative_annualized_savings = 0.0
 
     for i, step in enumerate(sequence, start=1):
+        target_state = step.get("target_state")
+        # el remanente de cola solo es válido para encadenar horizontes que
+        # apuntan al MISMO estado — si el horizonte N+1 apunta a otro estado,
+        # se recalcula desde cero (es un lever distinto, no una continuación).
+        if target_state != prev_target_state:
+            remaining_queue_hours = None
         result = simulate_change(
             lever_type=step["lever_type"],
-            target_state=step.get("target_state"),
+            target_state=target_state,
             reduction_pct=step.get("reduction_pct", 1.0),
             category=category,
             team=team,
             cost_per_hour_usd=cost_per_hour_usd,
             dataset=dataset,
             baseline_tickets=baseline_tickets,
+            remaining_queue_hours=remaining_queue_hours,
         )
         baseline_tickets = result.pop("resulting_tickets")
+        remaining_queue_hours = result.pop("remaining_queue_hours")
+        prev_target_state = target_state
         cumulative_annualized_savings += result["economic_impact"]["annualized_cost_saved_usd"]
         horizons.append({"horizon": i, **result})
 

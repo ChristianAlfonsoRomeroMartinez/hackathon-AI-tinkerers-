@@ -1,0 +1,754 @@
+<!doctype html>
+<title>Punto Ciego</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&display=swap');
+
+  :root {
+    --bg: #f6f7f5;
+    --surface: #ffffff;
+    --surface-2: #eef0ec;
+    --ink: #14151a;
+    --ink-secondary: #62666d;
+    --ink-muted: #8a8e94;
+    --border: #e2e4e0;
+    --accent: #2a56e8;
+    --accent-soft: #eaf0fe;
+    --status-good: #0ca30c;
+    --status-warning: #c98500;
+    --status-serious: #d9622f;
+    --status-critical: #d03b3b;
+    --team-alpha: #2a78d6;
+    --team-beta: #eb6834;
+    --team-gamma: #1baf7a;
+    --team-growth: #eda100;
+    --shadow: 0 1px 2px rgba(20,21,26,0.04), 0 8px 24px rgba(20,21,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0c0e;
+      --surface: #17181b;
+      --surface-2: #1e2024;
+      --ink: #f2f3f5;
+      --ink-secondary: #a7abb2;
+      --ink-muted: #7d8188;
+      --border: #2a2c30;
+      --accent: #7d97ff;
+      --accent-soft: rgba(125,151,255,0.14);
+      --status-good: #2fbf2f;
+      --status-warning: #fab219;
+      --status-serious: #ec835a;
+      --status-critical: #e9615f;
+      --team-alpha: #3987e5;
+      --team-beta: #d95926;
+      --team-gamma: #199e70;
+      --team-growth: #c98500;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0c0e;
+    --surface: #17181b;
+    --surface-2: #1e2024;
+    --ink: #f2f3f5;
+    --ink-secondary: #a7abb2;
+    --ink-muted: #7d8188;
+    --border: #2a2c30;
+    --accent: #7d97ff;
+    --accent-soft: rgba(125,151,255,0.14);
+    --status-good: #2fbf2f;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #e9615f;
+    --team-alpha: #3987e5;
+    --team-beta: #d95926;
+    --team-gamma: #199e70;
+    --team-growth: #c98500;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  ::selection { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-inner { display: flex; align-items: center; justify-content: space-between; padding-block: 14px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; }
+  .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  nav.top-nav { display: flex; gap: 22px; font-size: 0.85rem; color: var(--ink-secondary); }
+  nav.top-nav a { color: inherit; text-decoration: none; }
+  nav.top-nav a:hover { color: var(--ink); }
+  @media (max-width: 640px) { nav.top-nav { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { padding-block: 64px 40px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-soft); padding: 6px 12px; border-radius: 100px;
+    margin-bottom: 22px;
+  }
+  h1.thesis {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  h1.thesis .num { font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; }
+  p.thesis-sub {
+    font-size: 1.08rem; color: var(--ink-secondary); max-width: 640px; margin: 0 0 36px;
+  }
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  @media (max-width: 720px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { background: var(--surface); padding: 20px 22px; }
+  .kpi-value { font-size: 1.7rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .kpi-label { font-size: 0.78rem; color: var(--ink-muted); margin-top: 4px; }
+
+  section { padding-block: 56px; border-top: 1px solid var(--border); }
+  section.hero { border-top: none; }
+  h2.section-title {
+    font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; text-wrap: balance;
+  }
+  p.section-lede { color: var(--ink-secondary); max-width: 620px; margin: 0 0 32px; }
+
+  /* ---------- trace player ---------- */
+  .trace-shell {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .trace-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2);
+  }
+  .trace-dots { display: flex; gap: 6px; }
+  .trace-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .trace-controls { display: flex; align-items: center; gap: 10px; }
+  button.play-btn {
+    font: inherit; font-weight: 600; font-size: 0.82rem; color: #fff; background: var(--accent);
+    border: none; border-radius: 100px; padding: 7px 16px; cursor: pointer;
+  }
+  button.play-btn:hover { filter: brightness(1.08); }
+  .trace-progress { font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  .trace-log {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.82rem; padding: 20px; height: 380px; overflow-y: auto;
+  }
+  .trace-line { display: flex; gap: 10px; padding: 5px 0; opacity: 0; animation: appear 0.3s forwards; }
+  @keyframes appear { to { opacity: 1; } }
+  .trace-turn { color: var(--ink-muted); flex: 0 0 44px; }
+  .trace-tool { color: var(--accent); font-weight: 600; }
+  .trace-args { color: var(--ink-secondary); }
+  .trace-meta { color: var(--ink-muted); flex: 0 0 auto; margin-left: auto; }
+  .trace-final { color: var(--status-good); font-weight: 600; }
+
+  /* ---------- findings ---------- */
+  .sev-filters { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+  .sev-chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600;
+    padding: 7px 14px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; color: var(--ink-secondary); transition: all 0.15s;
+  }
+  .sev-chip .sw { width: 8px; height: 8px; border-radius: 50%; }
+  .sev-chip.active { color: var(--ink); border-color: currentColor; background: var(--surface-2); }
+  .sev-chip[data-sev="estrategico"].active { color: var(--status-critical); }
+  .sev-chip[data-sev="organizacional"].active { color: var(--status-serious); }
+  .sev-chip[data-sev="estructural"].active { color: var(--status-warning); }
+  .sev-chip[data-sev="tactica"].active { color: var(--status-good); }
+
+  .finding-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden;
+  }
+  .finding-head {
+    display: flex; gap: 16px; align-items: flex-start; padding: 22px 24px; cursor: pointer;
+    border-left: 4px solid transparent;
+  }
+  .finding-card[data-sev="estrategico"] .finding-head { border-left-color: var(--status-critical); }
+  .finding-card[data-sev="organizacional"] .finding-head { border-left-color: var(--status-serious); }
+  .finding-card[data-sev="estructural"] .finding-head { border-left-color: var(--status-warning); }
+  .finding-card[data-sev="tactica"] .finding-head { border-left-color: var(--status-good); }
+  .finding-id { font-size: 0.72rem; color: var(--ink-muted); font-weight: 600; letter-spacing: 0.04em; }
+  .finding-title { font-size: 1.12rem; font-weight: 700; margin: 3px 0 6px; letter-spacing: -0.01em; }
+  .finding-dek { color: var(--ink-secondary); font-size: 0.92rem; margin: 0; }
+  .sev-pill {
+    flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 5px 11px; border-radius: 100px; white-space: nowrap;
+  }
+  .sev-pill[data-sev="estrategico"] { background: color-mix(in srgb, var(--status-critical) 14%, transparent); color: var(--status-critical); }
+  .sev-pill[data-sev="organizacional"] { background: color-mix(in srgb, var(--status-serious) 16%, transparent); color: var(--status-serious); }
+  .sev-pill[data-sev="estructural"] { background: color-mix(in srgb, var(--status-warning) 18%, transparent); color: var(--status-warning); }
+  .sev-pill[data-sev="tactica"] { background: color-mix(in srgb, var(--status-good) 14%, transparent); color: var(--status-good); }
+  .chevron { margin-left: auto; color: var(--ink-muted); transition: transform 0.2s; flex: 0 0 auto; }
+  .finding-card.open .chevron { transform: rotate(180deg); }
+
+  .finding-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .finding-card.open .finding-body { max-height: 900px; }
+  .finding-body-inner { padding: 0 24px 24px; display: grid; gap: 18px; }
+  .criteria-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .criterion {
+    font-size: 0.78rem; padding: 6px 12px; border-radius: 8px; background: var(--surface-2);
+    color: var(--ink-secondary); display: flex; align-items: center; gap: 6px;
+  }
+  .criterion.met { color: var(--ink); font-weight: 600; }
+  .criterion.met .cdot { background: var(--status-good); }
+  .criterion .cdot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .evidence-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .evidence-tile { background: var(--surface-2); border-radius: 12px; padding: 14px 16px; }
+  .evidence-num { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .evidence-label { font-size: 0.74rem; color: var(--ink-muted); margin-top: 2px; }
+  .evidence-note { font-size: 0.88rem; color: var(--ink-secondary); border-left: 2px solid var(--border); padding-left: 14px; }
+  .ticket-refs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ticket-chip {
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 0.74rem; background: var(--surface-2);
+    padding: 4px 9px; border-radius: 6px; color: var(--ink-secondary);
+  }
+
+  /* ---------- matrix ---------- */
+  .matrix-wrap { overflow-x: auto; }
+  table.matrix { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 560px; }
+  table.matrix th, table.matrix td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  table.matrix th { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-muted); font-weight: 600; }
+  table.matrix td.rowlabel { font-weight: 600; }
+  .cell-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .heat { display: inline-block; min-width: 46px; padding: 4px 10px; border-radius: 8px; text-align: center; }
+
+  /* ---------- org chart ---------- */
+  .org-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .org-compare { grid-template-columns: 1fr; } }
+  .org-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+  .org-panel h3 { margin: 0 0 4px; font-size: 1rem; }
+  .org-panel .org-sub { font-size: 0.8rem; color: var(--ink-muted); margin: 0 0 18px; }
+  .team-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.86rem; }
+  .team-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+  .team-bar-track { flex: 1; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .team-bar-fill { height: 100%; border-radius: 4px; }
+  .team-count { font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; width: 34px; text-align: right; }
+  .mod-badge { display: inline-block; margin-top: 14px; font-size: 0.78rem; color: var(--status-critical); background: color-mix(in srgb, var(--status-critical) 12%, transparent); padding: 5px 10px; border-radius: 8px; }
+
+  /* ---------- horizons ---------- */
+  .horizon-track { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 780px) { .horizon-track { grid-template-columns: 1fr; } }
+  .horizon-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); position: relative; }
+  .horizon-num { font-size: 0.76rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .horizon-name { font-weight: 700; font-size: 1.02rem; margin: 6px 0 14px; }
+  .horizon-metric { display: flex; justify-content: space-between; font-size: 0.86rem; padding: 6px 0; border-top: 1px dashed var(--border); }
+  .horizon-metric:first-of-type { border-top: none; }
+  .horizon-metric b { font-variant-numeric: tabular-nums; }
+  .gate {
+    margin-top: 16px; font-size: 0.76rem; color: var(--ink-muted); background: var(--surface-2);
+    padding: 9px 12px; border-radius: 8px;
+  }
+  .horizon-arrow { display: none; }
+  @media (min-width: 781px) {
+    .horizon-card:not(:last-child)::after {
+      content: "→"; position: absolute; right: -22px; top: 50%; transform: translateY(-50%);
+      color: var(--ink-muted); font-size: 1.1rem;
+    }
+  }
+
+  /* ---------- raci ---------- */
+  table.raci { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  table.raci th, table.raci td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.raci th { color: var(--ink-muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .raci-letter { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; }
+  .raci-r { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .raci-a { background: color-mix(in srgb, var(--status-critical) 14%, transparent); color: var(--status-critical); }
+  .raci-c { background: var(--surface-2); color: var(--ink-secondary); }
+  .raci-i { background: var(--surface-2); color: var(--ink-muted); }
+  code.actor { font-family: "SF Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--ink-secondary); }
+
+  /* ---------- methodology ---------- */
+  .method { background: var(--surface-2); border-radius: 16px; padding: 28px 28px; font-size: 0.88rem; color: var(--ink-secondary); }
+  .method h3 { color: var(--ink); font-size: 0.95rem; margin: 0 0 6px; }
+  .method dl { display: grid; grid-template-columns: 160px 1fr; gap: 10px 16px; margin: 16px 0 0; }
+  .method dt { font-weight: 600; color: var(--ink); }
+  .method dd { margin: 0; }
+  @media (max-width: 640px) { .method dl { grid-template-columns: 1fr; } .method dd { margin-bottom: 8px; } }
+
+  footer { padding: 40px 0 60px; text-align: center; color: var(--ink-muted); font-size: 0.82rem; }
+</style>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="brand"><span class="brand-dot"></span> Consultor Organizacional Autónomo</div>
+    <nav class="top-nav">
+      <a href="#investigacion">Investigación</a>
+      <a href="#hallazgos">Hallazgos</a>
+      <a href="#matriz">Matriz</a>
+      <a href="#horizontes">Horizontes</a>
+      <a href="#metodologia">Metodología</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">● Diagnóstico completado — 6.000 tickets analizados</span>
+    <h1 class="thesis">El organigrama declarado esconde <span class="num" id="heroNum">4</span> equipos reales operando como uno solo.</h1>
+    <p class="thesis-sub">Un actor concentra el 37% de todos los traspasos de trabajo, una aprobación de seguridad hace esperar tickets 14 días en promedio, y un flujo "de un solo equipo" en realidad cruza los cuatro. Esto es lo que encontró el agente, con evidencia citada — sin haber leído la respuesta correcta.</p>
+    <div class="kpi-strip" id="kpiStrip"><!-- filled by JS --></div>
+  </div>
+</section>
+
+<section id="investigacion">
+  <div class="wrap">
+    <h2 class="section-title">Cómo investigó</h2>
+    <p class="section-lede">El agente nunca calcula un número: en cada paso decide qué herramienta invocar sobre el dataset real, lee el resultado, y decide el siguiente paso. Esta es la traza real de una corrida completa.</p>
+    <div class="trace-shell">
+      <div class="trace-toolbar">
+        <div class="trace-dots"><span></span><span></span><span></span></div>
+        <div class="trace-controls">
+          <span class="trace-progress" id="traceProgress">0 / 0</span>
+          <button class="play-btn" id="playBtn">▶ Reproducir traza</button>
+        </div>
+      </div>
+      <div class="trace-log" id="traceLog"></div>
+    </div>
+  </div>
+</section>
+
+<section id="hallazgos">
+  <div class="wrap">
+    <h2 class="section-title">Hallazgos, de mayor a menor severidad</h2>
+    <p class="section-lede">Cada hallazgo pasó por <code>classify_change_severity</code> — una regla de negocio determinista (≥2 de 3 criterios), no un juicio libre del modelo. No todo escaló a lo máximo: dos hallazgos con evidencia igual de sólida se quedan en "organizacional" porque no tocan trabajo de alto valor estratégico.</p>
+    <div class="sev-filters" id="sevFilters">
+      <button class="sev-chip active" data-sev="all">Todos (7)</button>
+      <button class="sev-chip" data-sev="estrategico"><span class="sw" style="background:var(--status-critical)"></span>Estratégico (5)</button>
+      <button class="sev-chip" data-sev="organizacional"><span class="sw" style="background:var(--status-serious)"></span>Organizacional (2)</button>
+    </div>
+    <div id="findingsList"><!-- filled by JS --></div>
+  </div>
+</section>
+
+<section id="matriz">
+  <div class="wrap">
+    <h2 class="section-title">Matriz esfuerzo × valor estratégico</h2>
+    <p class="section-lede">Clasificación semántica por ticket (LLM, salida estructurada forzada) cruzada con la criticidad estratégica de la taxonomía de negocio — sin LLM para este segundo eje, es un lookup directo.</p>
+    <div class="matrix-wrap">
+      <table class="matrix" id="matrixTable"></table>
+    </div>
+  </div>
+</section>
+
+<section id="organigrama">
+  <div class="wrap">
+    <h2 class="section-title">Organigrama declarado vs. topología real</h2>
+    <p class="section-lede">Comunidades detectadas por Louvain sobre el grafo real de handoffs (quién le pasa trabajo a quién), contra la membresía oficial de <code>org_chart_declared.json</code>.</p>
+    <div class="org-compare" id="orgCompare"></div>
+  </div>
+</section>
+
+<section id="horizontes">
+  <div class="wrap">
+    <h2 class="section-title">Plan de horizontes — cuello de botella de aprobación</h2>
+    <p class="section-lede">Simulado con Ley de Little sobre los tickets reales que pasaron por el estado, no una proyección genérica. Cada horizonte solo avanza si el anterior sostiene sus métricas en producción — esto es un techo teórico, no una garantía.</p>
+    <div class="horizon-track" id="horizonTrack"></div>
+  </div>
+</section>
+
+<section id="raci">
+  <div class="wrap">
+    <h2 class="section-title">RACI — horizonte de rediseño de equipos</h2>
+    <p class="section-lede">Solo para este horizonte (alcance acordado). Actores y equipos reales de <code>org_chart_declared.json</code>, no roles inventados.</p>
+    <div class="matrix-wrap">
+      <table class="raci" id="raciTable"></table>
+    </div>
+  </div>
+</section>
+
+<section id="metodologia">
+  <div class="wrap">
+    <h2 class="section-title">Anexo metodológico</h2>
+    <div class="method" id="methodBlock"></div>
+  </div>
+</section>
+
+<footer class="wrap">Generado por el Consultor Organizacional Autónomo · datos sintéticos con fines demostrativos</footer>
+
+<script>
+/* =================== DATOS REALES (calculados por código determinista) =================== */
+const KPIS = [
+  { value: "70%", label: "Capacidad fuera de valor directo" },
+  { value: "37%", label: "Handoffs por un solo actor" },
+  { value: "14.4 días", label: "p90 en aprobación de seguridad" },
+  { value: "$5.64M/año", label: "Ahorro al eliminar el cuello de botella" },
+];
+
+const FINDINGS = [
+  {
+    id: "F1", sev: "estrategico",
+    title: "Héroe / punto único de falla en team_alpha",
+    dek: "Un solo actor concentra la centralidad del grafo de colaboración muy por encima de cualquier otro, y su participación sigue creciendo.",
+    criteria: { alcance: true, persistencia: true, impacto: true },
+    evidence: [
+      { num: "0.457", label: "betweenness ponderada" },
+      { num: "3.2×", label: "vs. el 2º actor" },
+      { num: "2,211", label: "tickets tocados (37%)" },
+      { num: "4/4", label: "equipos cruzados" },
+    ],
+    note: "Rol declarado: “senior_engineer_bottleneck” (team_alpha) — el propio organigrama ya lo nombraba. Su participación en los handoffs totales subió de 15.7% (abril) a 21.9% (septiembre): la dependencia se profundiza, no se estabiliza.",
+    tickets: ["actor_hash: ad55053f31d6"],
+  },
+  {
+    id: "F2", sev: "estrategico",
+    title: "Aprobación de seguridad como cuello de botella crónico",
+    dek: "El estado “Pending Approval Security” es un outlier de cola 13× más lento que cualquier otro estado del flujo.",
+    criteria: { alcance: true, persistencia: true, impacto: true },
+    evidence: [
+      { num: "180h", label: "mediana en cola" },
+      { num: "345h", label: "p90 (14.4 días)" },
+      { num: "462", label: "tickets afectados" },
+      { num: "100%", label: "de criticidad alta/media" },
+    ],
+    note: "15 tickets siguen atascados ahí AHORA MISMO — el más antiguo (TCK-02869) lleva ~272 días abierto. Presente de forma estable en los 6 últimos meses. Eliminar el estado por completo: ~$5.64M/año en costo de demora.",
+    tickets: ["TCK-02869 (272 días abierto)"],
+  },
+  {
+    id: "F3", sev: "estrategico",
+    title: "Silo mal cortado: el organigrama no refleja cómo se trabaja",
+    dek: "4 equipos declarados colapsan en solo 2 comunidades reales de colaboración, cortando transversalmente los equipos oficiales.",
+    criteria: { alcance: true, persistencia: true, impacto: true },
+    evidence: [
+      { num: "4 → 2", label: "equipos → comunidades" },
+      { num: "0.079", label: "modularidad (muy baja)" },
+      { num: "53.9%", label: "del trabajo es alto/medio valor" },
+    ],
+    note: "Robusto a filtrar aristas ruidosas (min_weight 1/3/5 dan el mismo resultado). team_alpha se reparte entre ambas comunidades reales — ni siquiera es internamente consistente.",
+    tickets: [],
+  },
+  {
+    id: "F4", sev: "organizacional",
+    title: "Mantenimiento operativo: 100% trabajo repetido, un tercio nunca resuelto de raíz",
+    dek: "Ningún ticket de mantenimiento_operativo es un problema nuevo — todos son de 30 plantillas recurrentes.",
+    criteria: { alcance: true, persistencia: true, impacto: false },
+    evidence: [
+      { num: "0%", label: "ruido en clustering" },
+      { num: "30", label: "plantillas = 100% del volumen" },
+      { num: "31.6%", label: "deuda operativa oculta" },
+      { num: "0%", label: "alto/medio valor" },
+    ],
+    note: "No escala a estratégico: mantenimiento_operativo es “bajo” valor en la taxonomía de negocio. Sí cruza los 4 equipos y es persistente — por eso se queda en organizacional, no se sobre-actúa.",
+    tickets: [],
+  },
+  {
+    id: "F5", sev: "organizacional",
+    title: "Ping-pong de triage en soporte reactivo",
+    dek: "Casi 1 de cada 3 tickets de soporte_reactivo se reasigna 4 veces o más antes de resolverse.",
+    criteria: { alcance: true, persistencia: true, impacto: false },
+    evidence: [
+      { num: "30.6%", label: "con ≥4 reasignaciones" },
+      { num: "397", label: "tickets afectados" },
+      { num: "4/4", label: "equipos cruzados" },
+    ],
+    note: "Misma razón que F4 para no escalar más: soporte_reactivo es baja criticidad estratégica por definición de la taxonomía.",
+    tickets: [],
+  },
+  {
+    id: "F6", sev: "estrategico",
+    title: "Desalineación estratégica silenciosa entre equipos",
+    dek: "team_alpha hace mayoritariamente trabajo de bajo valor; team_growth hace mayoritariamente trabajo de alto valor — con la misma disponibilidad de categorías.",
+    criteria: { alcance: true, persistencia: true, impacto: true },
+    evidence: [
+      { num: "57.3%", label: "team_alpha en valor bajo" },
+      { num: "75.6%", label: "team_growth en alto/medio" },
+    ],
+    note: "No es un problema de capacidad — es de a qué se le asigna esa capacidad. Ambos equipos tienen acceso a las mismas 6 categorías de negocio.",
+    tickets: [],
+  },
+  {
+    id: "F7", sev: "estrategico",
+    title: "Fragmentación end-to-end: “onboarding de team_gamma” en realidad cruza 4 equipos",
+    dek: "El 100% de los tickets de onboarding_cliente están declarados como propiedad exclusiva de team_gamma. En la práctica, cada uno pasa por los 4 equipos en secuencia.",
+    criteria: { alcance: true, persistencia: true, impacto: true },
+    evidence: [
+      { num: "4", label: "tramos (leg) por ticket" },
+      { num: "4.9×", label: "más lento que el resto" },
+      { num: "94.8h", label: "mediana vs 21.4h global" },
+      { num: "100%", label: "alto valor estratégico" },
+    ],
+    note: "El organigrama declarado esconde literalmente que 4 equipos son dueños reales de este flujo, no 1. Costo de la fragmentación: ~$2.64M/año en tiempo extra de coordinación entre equipos.",
+    tickets: [],
+  },
+];
+
+// traza REAL de una corrida completa del agente (data/derived/agent_trace.jsonl)
+const TRACE = [
+  { turn: 1, tool: "get_flow_metrics", args: "{}", note: "panorama general — 6.000 tickets, lead time p50 21.4h / p90 102.8h", s: 0.04 },
+  { turn: 2, tool: "find_ticket_clusters", args: "{min_cluster_size: 10}", note: "127 clusters — el mayor: 194 tickets “Escalamiento de cuenta — riesgo de churn”", s: 1.61 },
+  { turn: 3, tool: "get_handoff_graph", args: "{min_weight: 5}", note: "ad55053f31d6 destaca: betweenness 0.457, in-degree 2.142", s: 0.04 },
+  { turn: 4, tool: "get_monthly_trend", args: '{state: "Pending Approval Security"}', note: "presente en 6/6 meses (59, 45, 55, 54, 61, 9 eventos)", s: 0.01 },
+  { turn: 5, tool: "classify_business_alignment", args: "{}", note: "39.1% deuda operativa, solo 29.9% valor directo", s: 0.02 },
+  { turn: 6, tool: "classify_change_severity", args: '{finding_id: "FND-001", ...}', note: "3/3 criterios -> estratégico", s: 0.0 },
+  { turn: 7, tool: "simulate_reduce_bottleneck_state", args: '{target_state: "Pending Approval Security", reduction_pct: 0.4}', note: "ahorro anualizado $2.26M", s: 0.03 },
+  { turn: 8, tool: "get_monthly_trend", args: '{actor_hash: "ad55053f31d6"}', note: "693 → 908 eventos/mes (abr→ago) — la dependencia crece", s: 0.01 },
+  { turn: 9, tool: "propose_org_blocks", args: "{min_weight: 1}", note: "2 bloques, modularidad 0.079", s: 0.1 },
+  { turn: 10, tool: "simulate_horizon_cascade", args: "{sequence: [40%, +50%, eliminar]}", note: "3 horizontes, $5.64M total sin doble conteo", s: 0.08 },
+  { turn: 11, tool: "classify_change_severity", args: '{finding_id: "FND-002", ...}', note: "3/3 criterios -> estratégico", s: 0.0 },
+  { turn: 12, tool: null, note: "informe final generado (sin más tool calls)", s: 15.4 },
+];
+
+const ORG = {
+  declared: [
+    { team: "team_alpha", n: 6, color: "var(--team-alpha)" },
+    { team: "team_beta", n: 6, color: "var(--team-beta)" },
+    { team: "team_gamma", n: 5, color: "var(--team-gamma)" },
+    { team: "team_growth", n: 5, color: "var(--team-growth)" },
+  ],
+  communities: [
+    { name: "Comunidad real 0", n: 12, mix: [["team_alpha", 6, "var(--team-alpha)"], ["team_beta", 6, "var(--team-beta)"]] },
+    { name: "Comunidad real 1", n: 10, mix: [["team_growth", 5, "var(--team-growth)"], ["team_gamma", 3, "var(--team-gamma)"], ["team_alpha", 2, "var(--team-alpha)"]] },
+  ],
+};
+
+const HORIZONS = [
+  { n: "Horizonte 1", name: "Reducir 40% la cola de aprobación", p50: "21.4h", p90: "96.6h", savings: "+$2.26M/año", gate: "Avanza si el p90 sostiene bajo 100h por 2 meses seguidos" },
+  { n: "Horizonte 2", name: "Reducir 50% adicional (70% acumulado)", p50: "21.4h", p90: "87.3h", savings: "+$1.69M/año", gate: "Avanza si la tasa de rechazo de seguridad no sube" },
+  { n: "Horizonte 3", name: "Eliminar el gate, mover a revisión async", p50: "19.8h", p90: "75.7h", savings: "+$1.69M/año", gate: "Meta final — $5.64M/año total (los 3 horizontes suman al 100%, sin doble conteo)" },
+];
+
+const RACI = [
+  { activity: "Definir el nuevo bloque end-to-end de onboarding", r: "PMO / Gerencia", a: "Consultor Organizacional Autónomo", c: "ca6ffc3d276c (team_gamma)", i: "Los 4 equipos" },
+  { activity: "Migrar actores de los 4 tramos al nuevo squad", r: "ca6ffc3d276c, 67ce9bf41da8, bfa77d8dd940, ed61a0106ec9", a: "Leads de cada equipo declarado", c: "People/HR", i: "Resto de cada equipo" },
+  { activity: "Redefinir accountability de tickets legacy en curso", r: "ca6ffc3d276c (team_gamma)", a: "PMO", c: "team_beta, team_alpha, team_growth", i: "Cliente" },
+  { activity: "Monitorear lead time post-cambio (meta: <30h mediana)", r: "Consultor Organizacional Autónomo", a: "PMO", c: "Nuevo squad", i: "Gerencia" },
+];
+
+const METHOD_HTML = `
+  <h3>Datos, modelo y limitaciones declaradas</h3>
+  <dl>
+    <dt>Datos</dt><dd>Sintéticos, generados por simulación (máquina de estados + distribuciones estadísticas). 6.000 tickets, ~36.800 eventos, ~9 meses de histórico. 7 disfunciones plantadas a propósito para validar al agente — este informe encontró las 7 sin leer la clave de validación.</dd>
+    <dt>Snapshot de WIP</dt><dd>45/6.000 tickets (0.75%) fueron congelados en un estado real que visitaron, para poblar el aging de WIP en vivo — sin inventar transiciones. Detalle ticket por ticket disponible en el repositorio.</dd>
+    <dt>Modelo de lenguaje</dt><dd><code>gpt-oss:120b</code> (Ollama Cloud) para clasificar tipo de esfuerzo por ticket y para orquestar el agente vía tool-use. Ninguna cifra de este informe fue calculada por el LLM.</dd>
+    <dt>Criticidad estratégica</dt><dd>NO usa LLM — es un lookup directo de la taxonomía de negocio por categoría.</dd>
+    <dt>Costo económico</dt><dd>Horas-en-cola × $45 USD/hora (configurable) — un proxy de "costo de demora", no nómina literal.</dd>
+    <dt>Severidad</dt><dd>Regla determinista testeada (17/17 tests unitarios), nunca a discreción libre del modelo.</dd>
+    <dt>Fuera de alcance</dt><dd>Conectores reales Jira/Zendesk, RAG documental, RACI completo para todos los horizontes, UI productiva.</dd>
+  </dl>
+`;
+
+/* =================== TRACE PLAYER =================== */
+const traceLog = document.getElementById('traceLog');
+const traceProgress = document.getElementById('traceProgress');
+const playBtn = document.getElementById('playBtn');
+let traceIdx = 0;
+let traceTimer = null;
+
+function traceLineHTML(t) {
+  if (!t.tool) {
+    return `<div class="trace-line"><span class="trace-turn">#${t.turn}</span><span class="trace-final">✓ ${t.note}</span></div>`;
+  }
+  return `<div class="trace-line">
+    <span class="trace-turn">#${t.turn}</span>
+    <span><span class="trace-tool">${t.tool}</span><span class="trace-args">(${t.args})</span><br><span style="color:var(--ink-muted)">→ ${t.note}</span></span>
+    <span class="trace-meta">${t.s}s</span>
+  </div>`;
+}
+
+function resetTrace() {
+  clearInterval(traceTimer);
+  traceTimer = null;
+  traceIdx = 0;
+  traceLog.innerHTML = '';
+  traceProgress.textContent = `0 / ${TRACE.length}`;
+  playBtn.textContent = '▶ Reproducir traza';
+}
+
+function stepTrace() {
+  if (traceIdx >= TRACE.length) {
+    clearInterval(traceTimer);
+    traceTimer = null;
+    playBtn.textContent = '↺ Reiniciar';
+    return;
+  }
+  traceLog.insertAdjacentHTML('beforeend', traceLineHTML(TRACE[traceIdx]));
+  traceLog.scrollTop = traceLog.scrollHeight;
+  traceIdx++;
+  traceProgress.textContent = `${traceIdx} / ${TRACE.length}`;
+}
+
+playBtn.addEventListener('click', () => {
+  if (traceTimer) { clearInterval(traceTimer); traceTimer = null; playBtn.textContent = '▶ Reproducir traza'; return; }
+  if (traceIdx >= TRACE.length) resetTrace();
+  playBtn.textContent = '⏸ Pausar';
+  traceTimer = setInterval(stepTrace, 550);
+});
+resetTrace();
+
+/* =================== RENDER =================== */
+document.getElementById('kpiStrip').innerHTML = KPIS.map(k => `
+  <div class="kpi"><div class="kpi-value">${k.value}</div><div class="kpi-label">${k.label}</div></div>
+`).join('');
+
+function renderFindings(filter) {
+  const list = FINDINGS.filter(f => filter === 'all' || f.sev === filter);
+  document.getElementById('findingsList').innerHTML = list.map(f => `
+    <div class="finding-card" data-sev="${f.sev}">
+      <div class="finding-head" onclick="this.closest('.finding-card').classList.toggle('open')">
+        <div style="flex:1">
+          <div class="finding-id">${f.id}</div>
+          <div class="finding-title">${f.title}</div>
+          <p class="finding-dek">${f.dek}</p>
+        </div>
+        <span class="sev-pill" data-sev="${f.sev}">${f.sev}</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="finding-body"><div class="finding-body-inner">
+        <div class="criteria-row">
+          <span class="criterion ${f.criteria.alcance ? 'met' : ''}"><span class="cdot"></span>Alcance estructural</span>
+          <span class="criterion ${f.criteria.persistencia ? 'met' : ''}"><span class="cdot"></span>Persistencia (6/6 meses)</span>
+          <span class="criterion ${f.criteria.impacto ? 'met' : ''}"><span class="cdot"></span>Impacto en core de negocio</span>
+        </div>
+        <div class="evidence-grid">
+          ${f.evidence.map(e => `<div class="evidence-tile"><div class="evidence-num">${e.num}</div><div class="evidence-label">${e.label}</div></div>`).join('')}
+        </div>
+        <p class="evidence-note">${f.note}</p>
+        ${f.tickets.length ? `<div class="ticket-refs">${f.tickets.map(t => `<span class="ticket-chip">${t}</span>`).join('')}</div>` : ''}
+      </div></div>
+    </div>
+  `).join('');
+}
+renderFindings('all');
+
+document.getElementById('sevFilters').addEventListener('click', (e) => {
+  const btn = e.target.closest('.sev-chip');
+  if (!btn) return;
+  document.querySelectorAll('.sev-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderFindings(btn.dataset.sev);
+});
+
+// org compare
+const declaredMax = Math.max(...ORG.declared.map(d => d.n));
+document.getElementById('orgCompare').innerHTML = `
+  <div class="org-panel">
+    <h3>Organigrama declarado</h3>
+    <p class="org-sub">org_chart_declared.json — 4 equipos, 22 personas</p>
+    ${ORG.declared.map(d => `
+      <div class="team-row">
+        <span class="team-swatch" style="background:${d.color}"></span>
+        <span style="width:110px">${d.team}</span>
+        <div class="team-bar-track"><div class="team-bar-fill" style="width:${d.n/declaredMax*100}%;background:${d.color}"></div></div>
+        <span class="team-count">${d.n}</span>
+      </div>`).join('')}
+  </div>
+  <div class="org-panel">
+    <h3>Topología real (Louvain)</h3>
+    <p class="org-sub">detectada sobre el grafo de handoffs</p>
+    ${ORG.communities.map(c => `
+      <div style="margin-bottom:14px">
+        <div style="font-size:0.86rem;font-weight:600;margin-bottom:6px">${c.name} · ${c.n} personas</div>
+        <div style="display:flex;height:10px;border-radius:5px;overflow:hidden">
+          ${c.mix.map(([team, n, color]) => `<div style="flex:${n};background:${color}" title="${team}: ${n}"></div>`).join('')}
+        </div>
+      </div>`).join('')}
+    <span class="mod-badge">modularidad 0.079 — fronteras casi inexistentes</span>
+  </div>
+`;
+
+// horizons
+document.getElementById('horizonTrack').innerHTML = HORIZONS.map(h => `
+  <div class="horizon-card">
+    <div class="horizon-num">${h.n}</div>
+    <div class="horizon-name">${h.name}</div>
+    <div class="horizon-metric"><span>Lead time p50</span><b>${h.p50}</b></div>
+    <div class="horizon-metric"><span>Lead time p90</span><b>${h.p90}</b></div>
+    <div class="horizon-metric"><span>Ahorro anualizado</span><b>${h.savings}</b></div>
+    <div class="gate">${h.gate}</div>
+  </div>
+`).join('');
+
+// RACI
+document.getElementById('raciTable').innerHTML = `
+  <thead><tr><th>Actividad</th><th>R</th><th>A</th><th>C</th><th>I</th></tr></thead>
+  <tbody>
+    ${RACI.map(r => `<tr>
+      <td>${r.activity}</td>
+      <td><code class="actor">${r.r}</code></td>
+      <td><code class="actor">${r.a}</code></td>
+      <td><code class="actor">${r.c}</code></td>
+      <td><code class="actor">${r.i}</code></td>
+    </tr>`).join('')}
+  </tbody>
+`;
+
+document.getElementById('methodBlock').innerHTML = METHOD_HTML;
+
+// matrix (effort_type x strategic_value, datos reales de classify_business_alignment)
+const MATRIX_DATA = {
+  rows: ["deuda_operativa", "deuda_tecnica", "friccion_proceso", "valor_directo"],
+  cols: ["alto", "medio", "bajo"],
+  cells: {
+    "deuda_operativa|alto": 55, "deuda_operativa|medio": 0, "deuda_operativa|bajo": 2291,
+    "deuda_tecnica|alto": 200, "deuda_tecnica|medio": 909, "deuda_tecnica|bajo": 144,
+    "friccion_proceso|alto": 423, "friccion_proceso|medio": 0, "friccion_proceso|bajo": 184,
+    "valor_directo|alto": 1643, "valor_directo|medio": 2, "valor_directo|bajo": 149,
+  },
+  rowTotals: { deuda_operativa: 2346, deuda_tecnica: 1253, friccion_proceso: 607, valor_directo: 1794 },
+};
+const rowLabel = { deuda_operativa: "Deuda operativa", deuda_tecnica: "Deuda técnica", friccion_proceso: "Fricción de proceso", valor_directo: "Valor directo" };
+const colLabel = { alto: "Alto", medio: "Medio", bajo: "Bajo" };
+function heatColor(n, max) {
+  const t = Math.min(n / max, 1);
+  const alpha = 0.08 + t * 0.55;
+  return `background: color-mix(in srgb, var(--accent) ${Math.round(alpha*100)}%, var(--surface));`;
+}
+const maxCell = Math.max(...Object.values(MATRIX_DATA.cells));
+document.getElementById('matrixTable').innerHTML = `
+  <thead><tr><th>Tipo de esfuerzo</th>${MATRIX_DATA.cols.map(c => `<th>${colLabel[c]} valor</th>`).join('')}<th>Total</th></tr></thead>
+  <tbody>
+    ${MATRIX_DATA.rows.map(r => `
+      <tr>
+        <td class="rowlabel">${rowLabel[r]}</td>
+        ${MATRIX_DATA.cols.map(c => {
+          const n = MATRIX_DATA.cells[`${r}|${c}`] || 0;
+          return `<td><span class="heat cell-val" style="${heatColor(n, maxCell)}">${n}</span></td>`;
+        }).join('')}
+        <td class="cell-val">${MATRIX_DATA.rowTotals[r]} <span style="color:var(--ink-muted);font-weight:400">(${(MATRIX_DATA.rowTotals[r]/6000*100).toFixed(0)}%)</span></td>
+      </tr>
+    `).join('')}
+  </tbody>
+`;
+
+// capacity outside core, by team
+const CORE_BY_TEAM = [
+  { team: "team_alpha", pct: 79.1, color: "var(--team-alpha)" },
+  { team: "team_beta", pct: 81.7, color: "var(--team-beta)" },
+  { team: "team_gamma", pct: 56.4, color: "var(--team-gamma)" },
+  { team: "team_growth", pct: 69.4, color: "var(--team-growth)" },
+];
+document.getElementById('matrixTable').insertAdjacentHTML('afterend', `
+  <div style="margin-top:28px">
+    <h3 style="font-size:0.95rem;margin:0 0 14px">% de capacidad fuera del core, por equipo declarado</h3>
+    ${CORE_BY_TEAM.map(t => `
+      <div class="team-row">
+        <span class="team-swatch" style="background:${t.color}"></span>
+        <span style="width:110px">${t.team}</span>
+        <div class="team-bar-track"><div class="team-bar-fill" style="width:${t.pct}%;background:${t.color}"></div></div>
+        <span class="team-count">${t.pct}%</span>
+      </div>`).join('')}
+  </div>
+`);
+</script>

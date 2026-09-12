@@ -36,11 +36,14 @@ ineficientes, desalineación estratégica, fragmentación de procesos, deuda ope
 ping-pong de triage) basadas en lo que ves.
 3. Para cada hipótesis, invoca las herramientas necesarias para confirmarla o descartarla con \
 evidencia cuantitativa. No aceptes una hipótesis sin al menos DOS señales independientes que la \
-soporten (ej. betweenness alto + coincide con equipo de un rol "bottleneck" declarado).
+soporten (ej. betweenness alto + coincide con equipo de un rol "bottleneck" declarado). Usa \
+get_monthly_trend para verificar persistencia real — NUNCA estimes months_present_last_6 de \
+memoria.
 4. Para cada hallazgo confirmado, clasifica su severidad con classify_change_severity. NO decidas \
 tú si es táctico o macro — usa la herramienta, con los números reales que obtuviste.
-5. Cuantifica el impacto económico de cada hallazgo con simulate_change (horas-en-cola x costo/hora \
-— usa el costo/hora default de la herramienta salvo que se te pida otro, y decláralo en tu resumen).
+5. Cuantifica el impacto económico de cada hallazgo con simulate_remove_bottleneck_state (elimina \
+el estado por completo) o simulate_reduce_bottleneck_state (lo reduce un %) — horas-en-cola x \
+costo/hora, usa el costo/hora default salvo que se te pida otro, y decláralo en tu resumen.
 6. Para hallazgos de severidad organizacional/estratégica, invoca propose_org_blocks y construye \
 el plan de horizontes con simulate_horizon_cascade. Para el horizonte específico de rediseño de \
 equipos (y SOLO ese horizonte, no los demás), incluye una tabla RACI (Responsable/Aprueba/\
@@ -74,7 +77,7 @@ def _log_trace(entry: dict) -> None:
         f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
 
 
-def run_agent(max_turns: int = 25, model: str = DEFAULT_MODEL, verbose: bool = True) -> dict:
+def run_agent(max_turns: int = 30, model: str = DEFAULT_MODEL, verbose: bool = True) -> dict:
     """Corre el loop de tool-use hasta que el LLM entregue una respuesta
     final sin tool_calls, o se agote max_turns. Devuelve la traza completa
     y el informe final (texto).
